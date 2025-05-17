@@ -1,0 +1,183 @@
+   0  $accept : program $end
+
+   1  program :
+   2          | program scalar_decl
+
+   3  scalar_decl : type idents ';'
+   4              |
+
+   5  idents : ident
+   6         | ident ',' idents
+   7         | ident '=' expression ',' idents
+
+   8  expression : expression '+' NUM
+   9             | expression '-' NUM
+  10             | NUM
+
+state 0
+	$accept : . program $end  (0)
+	program : .  (1)
+
+	.  reduce 1
+
+	program  goto 1
+
+
+1: shift/reduce conflict (shift 2, reduce 4) on type
+state 1
+	$accept : program . $end  (0)
+	program : program . scalar_decl  (2)
+	scalar_decl : .  (4)
+
+	$end  accept
+	type  shift 2
+	$end  reduce 4
+
+	scalar_decl  goto 3
+
+
+state 2
+	scalar_decl : type . idents ';'  (3)
+
+	ident  shift 4
+	.  error
+
+	idents  goto 5
+
+
+state 3
+	program : program scalar_decl .  (2)
+
+	.  reduce 2
+
+
+state 4
+	idents : ident .  (5)
+	idents : ident . ',' idents  (6)
+	idents : ident . '=' expression ',' idents  (7)
+
+	'='  shift 6
+	','  shift 7
+	';'  reduce 5
+
+
+state 5
+	scalar_decl : type idents . ';'  (3)
+
+	';'  shift 8
+	.  error
+
+
+state 6
+	idents : ident '=' . expression ',' idents  (7)
+
+	NUM  shift 9
+	.  error
+
+	expression  goto 10
+
+
+state 7
+	idents : ident ',' . idents  (6)
+
+	ident  shift 4
+	.  error
+
+	idents  goto 11
+
+
+state 8
+	scalar_decl : type idents ';' .  (3)
+
+	.  reduce 3
+
+
+state 9
+	expression : NUM .  (10)
+
+	.  reduce 10
+
+
+state 10
+	idents : ident '=' expression . ',' idents  (7)
+	expression : expression . '+' NUM  (8)
+	expression : expression . '-' NUM  (9)
+
+	'+'  shift 12
+	'-'  shift 13
+	','  shift 14
+	.  error
+
+
+state 11
+	idents : ident ',' idents .  (6)
+
+	.  reduce 6
+
+
+state 12
+	expression : expression '+' . NUM  (8)
+
+	NUM  shift 15
+	.  error
+
+
+state 13
+	expression : expression '-' . NUM  (9)
+
+	NUM  shift 16
+	.  error
+
+
+state 14
+	idents : ident '=' expression ',' . idents  (7)
+
+	ident  shift 4
+	.  error
+
+	idents  goto 17
+
+
+state 15
+	expression : expression '+' NUM .  (8)
+
+	.  reduce 8
+
+
+state 16
+	expression : expression '-' NUM .  (9)
+
+	.  reduce 9
+
+
+state 17
+	idents : ident '=' expression ',' idents .  (7)
+
+	.  reduce 7
+
+
+State 1 contains 1 shift/reduce conflict.
+
+
+12 terminals, 5 nonterminals
+11 grammar rules, 18 states
+
+grammar parser grammar
+symbol# value# symbol
+     0      0  $end
+     1    256  error
+     2    257  ID
+     3    258  NUM
+     4     61  '='
+     5    259  FLOAT
+     6    260  type
+     7    261  ident
+     8     43  '+'
+     9     45  '-'
+    10     59  ';'
+    11     44  ','
+    12    262  $accept
+    13    263  program
+    14    264  expression
+    15    265  scalar_decl
+    16    266  idents

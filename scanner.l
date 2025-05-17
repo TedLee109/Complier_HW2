@@ -1,5 +1,7 @@
 %{
 #include <stdio.h>
+#include <string.h>
+#include "y.tab.h"
 #define MAX_LINE_LENGTH 305
 static int linecount = 0;
 static int charcount = 0;
@@ -46,59 +48,91 @@ for|do|while|break|continue|if|else|return|struct|switch|case|default    {
 	if(token) printf("#key:%s\n", yytext); 
 	store(yytext); 
 }
-void|int|double|float|char {
-	if(token) printf("#key:%s\n", yytext);
-	store(yytext);
+void {
+	yylval.typeName = strdup(yytext); 
+	return VOID_TYPE;
 }
-const|signed|unsigned|short|long {
-	if(token) printf("#key:%s\n", yytext);
-	store(yytext);
+short {
+	yylval.typeName = strdup(yytext); 	
+	return SHORT_TYPE;
 }
+int  {
+	yylval.typeName = strdup(yytext); 
+	return INT_TYPE;
+}
+long  {
+	yylval.typeName = strdup(yytext); 
+	return LONG_TYPE;
+}
+long[ \t]+long {
+	yylval.typeName = strdup(yytext); 
+	return LONGLONG_TYPE;
+}
+double {
+	yylval.typeName = strdup(yytext); 
+	return DOUBLE_TYPE;
+}
+float {
+	yylval.typeName = strdup(yytext); 
+	return FLOAT_TYPE;
+}
+char {
+	yylval.typeName = strdup(yytext); 
+	return CHAR_TYPE;
+}
+const {
+	yylval.typeName = strdup(yytext); 
+	return CONST;
+}
+signed {
+	yylval.typeName = strdup(yytext); 
+	return SIGNED;
+}
+unsigned {
+	yylval.typeName = strdup(yytext); 
+	return UNSIGNED;
+}
+
 NULL|__COUNTER__|__LINE__|INT_MAX|INT_MIN|CHAR_MAX|CHAR_MIN|MAX|MIN {
 	if(token) printf("#macro:%s\n", yytext); 
 	store(yytext); 
 }
 [a-zA-Z_][a-zA-Z0-9_]* {
-	if(token) printf("#id:%s\n", yytext); 
-	store(yytext);
+	yylval.idName = strdup(yytext); 
+	return ident; 	
 }
-[-+]{0,1}[0-9]+      { 
-	if(token) printf("#integer:%s\n", yytext);
-	store(yytext);
+[0-9]+      { 
+	yylval.intVal = atoi(yytext);
+	return NUM; 
 }
 [+-]{0,1}[0-9]+[.][0-9]*|[+-]{0,1}[.][0-9]+ {
-	if(token) printf("#float:%s\n", yytext); 
-	store(yytext); 
+	yylval.dVal = atof(yytext); 
+	return FLOAT; 
 }
 [\+\-\*/=%<>&!|]  { 
-	if(token) printf("#op:%s\n", yytext);
-	store(yytext);
+	return yytext[0]; 
 }
-\-\-|\+\+|>=|<=|==|!=|&&|\|\| { 
-	if(token) printf("#op:%s\n", yytext);
-	store(yytext);
+\-\- {
+	return DEC; 
+}
+\+\+ {
+	return INC; 
+}
+>=|<=|==|!=|&&|\|\| { 
+	return yytext[0]; 
 }
 [:;,.\[\]{}()] {
-	if(token) printf("#punc:%s\n", yytext);
-	store(yytext);
+	return yytext[0]; 
 }
 \'([^\\']|\\[abefnrtv\\'"?]|\\[0-7]{1,3}|\\x[0-9a-fA-F]+|\\[uU][0-9a-fA-F]{4}|\\[uU][0-9a-fA-F]{8})\' {
-	if(token) printf("#char:%s\n", yytext);
-	store(yytext);
+	yylval.char_const = strdup(yytext); 
+	return CHAR_LIT; 
 }
 \"([^\\"]|\\[abefnrtv\\'"?]|\\[0-7]{1,3}|\\x[0-9a-fA-F]+|\\[uU][0-9a-fA-F]{4}|\\[uU][0-9a-fA-F]{8})*\" {
-    if(token) printf("#string:%s\n", yytext);
-    store(yytext);
+	yylval.string_const = strdup(yytext); 
+	return STRING_LIT; 
 }
-\n          { 
-	++linecount; 
-	if(source) {
-		printf("%d:%s", linecount, line);
-		printf("\n");
-	}
-	charcount = 0; 
-	line[0] = '\0';
-}
+\n         ; 
 [ \t]      {store(yytext);}   
 .          { printf("UNKNOWN: %s\n", yytext); }
 <COMMENT>"*/" { 
@@ -114,10 +148,7 @@ NULL|__COUNTER__|__LINE__|INT_MAX|INT_MIN|CHAR_MAX|CHAR_MIN|MAX|MIN {
 }
 <COMMENT>.    {store(yytext);};
 %%
-int main() {
-	yylex();
-	return 0;
-}
+
 int yywrap() {
 	return 1;
 }
