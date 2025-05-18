@@ -32,9 +32,9 @@ int yyerror(char *s);
 %token<char_const> CHAR_LIT
 %token<string_const> STRING_LIT
 %token<idName> ident
-%token INC DEC LAND LOR
+%token INC DEC LAND LOR IF ELSE
 %type<typeName> type non_const integer int_size
-%type<tree> scalar_decl idents single_ident expression unary_expr posfix_expr primary_expr array_decl arrays single_array array_shape arr_content list_contents func_decl func_cfg paras func_arg args
+%type<tree> scalar_decl idents single_ident expression unary_expr posfix_expr primary_expr array_decl arrays single_array array_shape arr_content list_contents func_decl func_cfg paras func_arg args func_def compound_stmt  stmts_decls decl stmt expr_stmt if_else_stmt
 
 %right '='
 %left LOR 
@@ -47,12 +47,7 @@ int yyerror(char *s);
 %left LSHIFT RSHIFT
 %left '+' '-'
 %left '*' '/' '%'
-%right ADDR  
-%right DEREFERENCE
-%right TYPE_CAST
-%right LOG_NOT BIT_NOT
-%right UMINUS UPLUS
-%right PREFIX 
+%right PREFIX UMINUS UPLUS LOG_NOT BIT_NOT TYPE_CAST DEREFERENCE ADDR  
 %left SUFFIX FUNC_CALL ARR_SUB GROUP
 %%
 
@@ -60,6 +55,7 @@ program: /* empty */
 	| program scalar_decl { printf("%s", $2); }
 	| program array_decl {printf("%s", $2); } 
 	| program func_decl {printf("%s", $2); }
+	| program func_def {printf("%s", $2);}
 	;
 scalar_decl: type idents ';' 
 	{
@@ -72,6 +68,7 @@ scalar_decl: type idents ';'
 type: CONST {$$ = $1;}
 	| CONST non_const
 	{
+		printf("type\n"); 
 		char type_name[105]; 
 		sprintf(type_name, "%s%s", $1, $2); 
 		$$ = strdup(type_name); 
@@ -293,6 +290,96 @@ args:
 	| expression {$$ = $1;}
 	; 
 
+func_def: 
+	type ident func_cfg compound_stmt
+		{
+			
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "<func_def>%s%s%s%s</func_def>", $1, $2, $3, $4);
+			$$ = strdup(buffer);
+		}
+	| type '*' ident func_cfg compound_stmt
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "<func_def>%s*%s%s%s</func_def>", $1, $3, $4, $5);
+			$$ = strdup(buffer);
+		}
+	;
+compound_stmt: 
+	'{' stmts_decls '}' 
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "{%s}", $2);
+			$$ = strdup(buffer);
+		}
+	| '{' '}'
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "{}");
+			$$ = strdup(buffer);
+		}
+	;
+stmts_decls: 
+	stmt stmts_decls
+		{
+			
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "%s%s", $1, $2);
+			$$ = strdup(buffer);
+		}
+	| decl stmts_decls
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "%s%s", $1, $2);
+			$$ = strdup(buffer);
+		}
+	| stmt 
+		{ $$ = $1;}
+	| decl 
+		{$$ = $1;}
+	;
+decl: 
+	scalar_decl
+		{$$ = $1;}
+	| array_decl
+		{$$ = $1;}
+	; 
+stmt: 
+	expr_stmt
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "<stmt>%s</stmt>", $1);
+			$$ = strdup(buffer);
+		}
+	| if_else_stmt
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "<stmt>%s</stmt>", $1);
+			$$ = strdup(buffer);
+		}
+	; 
+expr_stmt: 
+	expression ';' 
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "%s;", $1);
+			$$ = strdup(buffer);
+		}
+	; 
+if_else_stmt:
+	IF '(' expression ')' compound_stmt
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "if(%s)%s", $3, $5);
+			$$ = strdup(buffer);
+		}
+	| IF '(' expression ')' compound_stmt ELSE compound_stmt
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "if(%s)%selse%s", $3, $5, $7);
+			$$ = strdup(buffer);
+		}
+	;
 expression: expression '+' expression 
 	{ 
 		char buffer[1024];
@@ -481,10 +568,10 @@ posfix_expr:
 		sprintf(buffer, "<expr>%s--</expr>", $1); 
 		$$ = strdup(buffer); 
 	}
-	| ident func_arg %prec FUNC_CALL
+	| posfix_expr func_arg %prec FUNC_CALL
 	{
 		char buffer[MAX_LEN]; 
-		sprintf(buffer, "<expr><expr>%s</expr>%s</expr>", $1, $2); 
+		sprintf(buffer, "<expr>%s%s</expr>", $1, $2); 
 		$$ = strdup(buffer); 
 	}
 	| ident array_shape %prec ARR_SUB

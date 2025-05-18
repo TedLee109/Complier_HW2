@@ -44,7 +44,13 @@ void store(char *s) {
 	store(yytext);
 	token = 0;
 }
-for|do|while|break|continue|if|else|return|struct|switch|case|default    { 
+if {
+	return IF; 
+}
+else {
+	return ELSE; 
+}
+for|do|while|break|continue|return|struct|switch|case|default    { 
 	if(token) printf("#key:%s\n", yytext); 
 	store(yytext); 
 }
