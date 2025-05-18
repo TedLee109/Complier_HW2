@@ -89,25 +89,32 @@
   68             | expression '&' expression
   69             | expression LSHIFT expression
   70             | expression RSHIFT expression
-  71             | '+' expression
-  72             | '-' expression
-  73             | INC expression
-  74             | DEC expression
-  75             | expression INC
-  76             | expression DEC
-  77             | '*' expression
-  78             | '&' ident
-  79             | ident func_arg
-  80             | ident array_shape
-  81             | '(' type ')' expression
-  82             | '!' expression
-  83             | '~' expression
-  84             | NUM
-  85             | FLOAT
-  86             | CHAR_LIT
-  87             | STRING_LIT
-  88             | ident
-  89             | '(' expression ')'
+  71             | expression '=' expression
+  72             | unary_expr
+
+  73  unary_expr : posfix_expr
+  74             | '+' unary_expr
+  75             | '-' unary_expr
+  76             | INC unary_expr
+  77             | DEC unary_expr
+  78             | '*' unary_expr
+  79             | '&' ident
+  80             | '(' type ')' unary_expr
+  81             | '!' unary_expr
+  82             | '~' unary_expr
+
+  83  posfix_expr : primary_expr
+  84              | posfix_expr INC
+  85              | posfix_expr DEC
+  86              | ident func_arg
+  87              | ident array_shape
+
+  88  primary_expr : NUM
+  89               | FLOAT
+  90               | CHAR_LIT
+  91               | STRING_LIT
+  92               | ident
+  93               | '(' expression ')'
 
 state 0
 	$accept : . program $end  (0)
@@ -407,6 +414,9 @@ state 30
 	.  error
 
 	expression  goto 54
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
 state 31
@@ -429,7 +439,10 @@ state 31
 	'~'  shift 53
 	.  error
 
-	expression  goto 55
+	expression  goto 58
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
 state 32
@@ -447,21 +460,21 @@ state 32
 	CONST  shift 10
 	SIGNED  shift 11
 	UNSIGNED  shift 12
-	')'  shift 56
+	')'  shift 59
 	.  error
 
-	type  goto 57
+	type  goto 60
 	non_const  goto 14
 	integer  goto 15
 	int_size  goto 16
-	paras  goto 58
+	paras  goto 61
 
 
 state 33
 	single_array : ident array_shape .  (32)
 	single_array : ident array_shape . '=' arr_content  (33)
 
-	'='  shift 59
+	'='  shift 62
 	';'  reduce 32
 	','  reduce 32
 
@@ -469,7 +482,7 @@ state 33
 state 34
 	func_decl : type ident func_cfg . ';'  (41)
 
-	';'  shift 60
+	';'  shift 63
 	.  error
 
 
@@ -481,7 +494,7 @@ state 35
 	';'  reduce 28
 	','  reduce 28
 
-	func_cfg  goto 61
+	func_cfg  goto 64
 
 
 state 36
@@ -493,11 +506,11 @@ state 36
 state 37
 	idents : single_ident ',' . idents  (25)
 
-	ident  shift 62
-	'*'  shift 63
+	ident  shift 65
+	'*'  shift 66
 	.  error
 
-	idents  goto 64
+	idents  goto 67
 	single_ident  goto 26
 
 
@@ -510,76 +523,77 @@ state 38
 state 39
 	arrays : single_array ',' . arrays  (31)
 
-	ident  shift 65
+	ident  shift 68
 	.  error
 
-	arrays  goto 66
+	arrays  goto 69
 	single_array  goto 28
 
 
 state 40
-	expression : NUM .  (84)
+	primary_expr : NUM .  (88)
 
-	.  reduce 84
+	.  reduce 88
 
 
 state 41
-	expression : FLOAT .  (85)
+	primary_expr : FLOAT .  (89)
 
-	.  reduce 85
+	.  reduce 89
 
 
 state 42
-	expression : CHAR_LIT .  (86)
+	primary_expr : CHAR_LIT .  (90)
 
-	.  reduce 86
+	.  reduce 90
 
 
 state 43
-	expression : STRING_LIT .  (87)
+	primary_expr : STRING_LIT .  (91)
 
-	.  reduce 87
+	.  reduce 91
 
 
 state 44
-	expression : ident . func_arg  (79)
-	expression : ident . array_shape  (80)
-	expression : ident .  (88)
+	posfix_expr : ident . func_arg  (86)
+	posfix_expr : ident . array_shape  (87)
+	primary_expr : ident .  (92)
 
 	'['  shift 31
-	'('  shift 67
-	INC  reduce 88
-	DEC  reduce 88
-	LAND  reduce 88
-	LOR  reduce 88
-	'|'  reduce 88
-	'^'  reduce 88
-	'&'  reduce 88
-	EQ  reduce 88
-	NEQ  reduce 88
-	'<'  reduce 88
-	'>'  reduce 88
-	GE  reduce 88
-	LE  reduce 88
-	LSHIFT  reduce 88
-	RSHIFT  reduce 88
-	'+'  reduce 88
-	'-'  reduce 88
-	'*'  reduce 88
-	'/'  reduce 88
-	'%'  reduce 88
-	';'  reduce 88
-	','  reduce 88
-	']'  reduce 88
-	'}'  reduce 88
-	')'  reduce 88
+	'('  shift 70
+	'='  reduce 92
+	INC  reduce 92
+	DEC  reduce 92
+	LAND  reduce 92
+	LOR  reduce 92
+	'|'  reduce 92
+	'^'  reduce 92
+	'&'  reduce 92
+	EQ  reduce 92
+	NEQ  reduce 92
+	'<'  reduce 92
+	'>'  reduce 92
+	GE  reduce 92
+	LE  reduce 92
+	LSHIFT  reduce 92
+	RSHIFT  reduce 92
+	'+'  reduce 92
+	'-'  reduce 92
+	'*'  reduce 92
+	'/'  reduce 92
+	'%'  reduce 92
+	';'  reduce 92
+	','  reduce 92
+	']'  reduce 92
+	'}'  reduce 92
+	')'  reduce 92
 
-	array_shape  goto 68
-	func_arg  goto 69
+	array_shape  goto 71
+	func_arg  goto 72
 
 
 state 45
-	expression : INC . expression  (73)
+	unary_expr : INC . unary_expr  (76)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -597,11 +611,13 @@ state 45
 	'~'  shift 53
 	.  error
 
-	expression  goto 70
+	unary_expr  goto 73
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
 state 46
-	expression : DEC . expression  (74)
+	unary_expr : DEC . unary_expr  (77)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -619,18 +635,20 @@ state 46
 	'~'  shift 53
 	.  error
 
-	expression  goto 71
+	unary_expr  goto 74
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
 state 47
-	expression : '&' . ident  (78)
+	unary_expr : '&' . ident  (79)
 
-	ident  shift 72
+	ident  shift 75
 	.  error
 
 
 state 48
-	expression : '+' . expression  (71)
+	unary_expr : '+' . unary_expr  (74)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -648,11 +666,13 @@ state 48
 	'~'  shift 53
 	.  error
 
-	expression  goto 73
+	unary_expr  goto 76
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
 state 49
-	expression : '-' . expression  (72)
+	unary_expr : '-' . unary_expr  (75)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -670,11 +690,13 @@ state 49
 	'~'  shift 53
 	.  error
 
-	expression  goto 74
+	unary_expr  goto 77
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
 state 50
-	expression : '*' . expression  (77)
+	unary_expr : '*' . unary_expr  (78)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -692,12 +714,14 @@ state 50
 	'~'  shift 53
 	.  error
 
-	expression  goto 75
+	unary_expr  goto 78
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
 state 51
-	expression : '(' . type ')' expression  (81)
-	expression : '(' . expression ')'  (89)
+	unary_expr : '(' . type ')' unary_expr  (80)
+	primary_expr : '(' . expression ')'  (93)
 
 	SHORT_TYPE  shift 2
 	INT_TYPE  shift 3
@@ -726,15 +750,18 @@ state 51
 	'~'  shift 53
 	.  error
 
-	type  goto 76
+	type  goto 79
 	non_const  goto 14
 	integer  goto 15
 	int_size  goto 16
-	expression  goto 77
+	expression  goto 80
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
 state 52
-	expression : '!' . expression  (82)
+	unary_expr : '!' . unary_expr  (81)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -752,11 +779,13 @@ state 52
 	'~'  shift 53
 	.  error
 
-	expression  goto 78
+	unary_expr  goto 81
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
 state 53
-	expression : '~' . expression  (83)
+	unary_expr : '~' . unary_expr  (82)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -774,7 +803,9 @@ state 53
 	'~'  shift 53
 	.  error
 
-	expression  goto 79
+	unary_expr  goto 82
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
 state 54
@@ -797,229 +828,45 @@ state 54
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	LAND  shift 82
-	LOR  shift 83
-	'|'  shift 84
-	'^'  shift 85
-	'&'  shift 86
-	EQ  shift 87
-	NEQ  shift 88
-	'<'  shift 89
-	'>'  shift 90
-	GE  shift 91
-	LE  shift 92
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	'='  shift 83
+	LAND  shift 84
+	LOR  shift 85
+	'|'  shift 86
+	'^'  shift 87
+	'&'  shift 88
+	EQ  shift 89
+	NEQ  shift 90
+	'<'  shift 91
+	'>'  shift 92
+	GE  shift 93
+	LE  shift 94
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
 	';'  reduce 26
 	','  reduce 26
 
 
 state 55
-	array_shape : '[' expression . ']'  (34)
-	array_shape : '[' expression . ']' array_shape  (35)
-	expression : expression . '+' expression  (53)
-	expression : expression . '-' expression  (54)
-	expression : expression . '*' expression  (55)
-	expression : expression . '/' expression  (56)
-	expression : expression . '%' expression  (57)
-	expression : expression . '>' expression  (58)
-	expression : expression . '<' expression  (59)
-	expression : expression . GE expression  (60)
-	expression : expression . LE expression  (61)
-	expression : expression . EQ expression  (62)
-	expression : expression . NEQ expression  (63)
-	expression : expression . LAND expression  (64)
-	expression : expression . LOR expression  (65)
-	expression : expression . '|' expression  (66)
-	expression : expression . '^' expression  (67)
-	expression : expression . '&' expression  (68)
-	expression : expression . LSHIFT expression  (69)
-	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : unary_expr .  (72)
 
-	INC  shift 80
-	DEC  shift 81
-	LAND  shift 82
-	LOR  shift 83
-	'|'  shift 84
-	'^'  shift 85
-	'&'  shift 86
-	EQ  shift 87
-	NEQ  shift 88
-	'<'  shift 89
-	'>'  shift 90
-	GE  shift 91
-	LE  shift 92
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
-	']'  shift 100
-	.  error
+	.  reduce 72
 
 
 state 56
-	func_cfg : '(' ')' .  (44)
+	unary_expr : posfix_expr .  (73)
+	posfix_expr : posfix_expr . INC  (84)
+	posfix_expr : posfix_expr . DEC  (85)
 
-	.  reduce 44
-
-
-state 57
-	paras : type . ident ',' paras  (45)
-	paras : type . '*' ident ',' paras  (46)
-	paras : type . ident  (47)
-	paras : type . '*' ident  (48)
-
-	ident  shift 101
-	'*'  shift 102
-	.  error
-
-
-state 58
-	func_cfg : '(' paras . ')'  (43)
-
-	')'  shift 103
-	.  error
-
-
-state 59
-	single_array : ident array_shape '=' . arr_content  (33)
-
-	'{'  shift 104
-	.  error
-
-	arr_content  goto 105
-
-
-state 60
-	func_decl : type ident func_cfg ';' .  (41)
-
-	.  reduce 41
-
-
-state 61
-	func_decl : type '*' ident func_cfg . ';'  (42)
-
-	';'  shift 106
-	.  error
-
-
-state 62
-	single_ident : ident . '=' expression  (26)
-	single_ident : ident .  (27)
-
-	'='  shift 30
-	';'  reduce 27
-	','  reduce 27
-
-
-state 63
-	single_ident : '*' . ident  (28)
-
-	ident  shift 107
-	.  error
-
-
-state 64
-	idents : single_ident ',' idents .  (25)
-
-	.  reduce 25
-
-
-state 65
-	single_array : ident . array_shape  (32)
-	single_array : ident . array_shape '=' arr_content  (33)
-
-	'['  shift 31
-	.  error
-
-	array_shape  goto 33
-
-
-state 66
-	arrays : single_array ',' arrays .  (31)
-
-	.  reduce 31
-
-
-state 67
-	func_arg : '(' . ')'  (49)
-	func_arg : '(' . args ')'  (50)
-
-	NUM  shift 40
-	FLOAT  shift 41
-	CHAR_LIT  shift 42
-	STRING_LIT  shift 43
-	ident  shift 44
-	INC  shift 45
-	DEC  shift 46
-	'&'  shift 47
-	'+'  shift 48
-	'-'  shift 49
-	'*'  shift 50
-	'('  shift 51
-	')'  shift 108
-	'!'  shift 52
-	'~'  shift 53
-	.  error
-
-	expression  goto 109
-	args  goto 110
-
-
-state 68
-	expression : ident array_shape .  (80)
-
-	.  reduce 80
-
-
-state 69
-	expression : ident func_arg .  (79)
-
-	.  reduce 79
-
-
-70: shift/reduce conflict (shift 80, reduce 73) on INC
-70: shift/reduce conflict (shift 81, reduce 73) on DEC
-state 70
-	expression : expression . '+' expression  (53)
-	expression : expression . '-' expression  (54)
-	expression : expression . '*' expression  (55)
-	expression : expression . '/' expression  (56)
-	expression : expression . '%' expression  (57)
-	expression : expression . '>' expression  (58)
-	expression : expression . '<' expression  (59)
-	expression : expression . GE expression  (60)
-	expression : expression . LE expression  (61)
-	expression : expression . EQ expression  (62)
-	expression : expression . NEQ expression  (63)
-	expression : expression . LAND expression  (64)
-	expression : expression . LOR expression  (65)
-	expression : expression . '|' expression  (66)
-	expression : expression . '^' expression  (67)
-	expression : expression . '&' expression  (68)
-	expression : expression . LSHIFT expression  (69)
-	expression : expression . RSHIFT expression  (70)
-	expression : INC expression .  (73)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
-
-	INC  shift 80
-	DEC  shift 81
+	INC  shift 102
+	DEC  shift 103
+	'='  reduce 73
 	LAND  reduce 73
 	LOR  reduce 73
 	'|'  reduce 73
@@ -1045,9 +892,15 @@ state 70
 	')'  reduce 73
 
 
-71: shift/reduce conflict (shift 80, reduce 74) on INC
-71: shift/reduce conflict (shift 81, reduce 74) on DEC
-state 71
+state 57
+	posfix_expr : primary_expr .  (83)
+
+	.  reduce 83
+
+
+state 58
+	array_shape : '[' expression . ']'  (34)
+	array_shape : '[' expression . ']' array_shape  (35)
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -1066,371 +919,118 @@ state 71
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : DEC expression .  (74)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	LAND  reduce 74
-	LOR  reduce 74
-	'|'  reduce 74
-	'^'  reduce 74
-	'&'  reduce 74
-	EQ  reduce 74
-	NEQ  reduce 74
-	'<'  reduce 74
-	'>'  reduce 74
-	GE  reduce 74
-	LE  reduce 74
-	LSHIFT  reduce 74
-	RSHIFT  reduce 74
-	'+'  reduce 74
-	'-'  reduce 74
-	'*'  reduce 74
-	'/'  reduce 74
-	'%'  reduce 74
-	';'  reduce 74
-	','  reduce 74
-	']'  reduce 74
-	'}'  reduce 74
-	')'  reduce 74
-
-
-state 72
-	expression : '&' ident .  (78)
-
-	.  reduce 78
-
-
-73: shift/reduce conflict (shift 80, reduce 71) on INC
-73: shift/reduce conflict (shift 81, reduce 71) on DEC
-state 73
-	expression : expression . '+' expression  (53)
-	expression : expression . '-' expression  (54)
-	expression : expression . '*' expression  (55)
-	expression : expression . '/' expression  (56)
-	expression : expression . '%' expression  (57)
-	expression : expression . '>' expression  (58)
-	expression : expression . '<' expression  (59)
-	expression : expression . GE expression  (60)
-	expression : expression . LE expression  (61)
-	expression : expression . EQ expression  (62)
-	expression : expression . NEQ expression  (63)
-	expression : expression . LAND expression  (64)
-	expression : expression . LOR expression  (65)
-	expression : expression . '|' expression  (66)
-	expression : expression . '^' expression  (67)
-	expression : expression . '&' expression  (68)
-	expression : expression . LSHIFT expression  (69)
-	expression : expression . RSHIFT expression  (70)
-	expression : '+' expression .  (71)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
-
-	INC  shift 80
-	DEC  shift 81
-	LAND  reduce 71
-	LOR  reduce 71
-	'|'  reduce 71
-	'^'  reduce 71
-	'&'  reduce 71
-	EQ  reduce 71
-	NEQ  reduce 71
-	'<'  reduce 71
-	'>'  reduce 71
-	GE  reduce 71
-	LE  reduce 71
-	LSHIFT  reduce 71
-	RSHIFT  reduce 71
-	'+'  reduce 71
-	'-'  reduce 71
-	'*'  reduce 71
-	'/'  reduce 71
-	'%'  reduce 71
-	';'  reduce 71
-	','  reduce 71
-	']'  reduce 71
-	'}'  reduce 71
-	')'  reduce 71
-
-
-74: shift/reduce conflict (shift 80, reduce 72) on INC
-74: shift/reduce conflict (shift 81, reduce 72) on DEC
-state 74
-	expression : expression . '+' expression  (53)
-	expression : expression . '-' expression  (54)
-	expression : expression . '*' expression  (55)
-	expression : expression . '/' expression  (56)
-	expression : expression . '%' expression  (57)
-	expression : expression . '>' expression  (58)
-	expression : expression . '<' expression  (59)
-	expression : expression . GE expression  (60)
-	expression : expression . LE expression  (61)
-	expression : expression . EQ expression  (62)
-	expression : expression . NEQ expression  (63)
-	expression : expression . LAND expression  (64)
-	expression : expression . LOR expression  (65)
-	expression : expression . '|' expression  (66)
-	expression : expression . '^' expression  (67)
-	expression : expression . '&' expression  (68)
-	expression : expression . LSHIFT expression  (69)
-	expression : expression . RSHIFT expression  (70)
-	expression : '-' expression .  (72)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
-
-	INC  shift 80
-	DEC  shift 81
-	LAND  reduce 72
-	LOR  reduce 72
-	'|'  reduce 72
-	'^'  reduce 72
-	'&'  reduce 72
-	EQ  reduce 72
-	NEQ  reduce 72
-	'<'  reduce 72
-	'>'  reduce 72
-	GE  reduce 72
-	LE  reduce 72
-	LSHIFT  reduce 72
-	RSHIFT  reduce 72
-	'+'  reduce 72
-	'-'  reduce 72
-	'*'  reduce 72
-	'/'  reduce 72
-	'%'  reduce 72
-	';'  reduce 72
-	','  reduce 72
-	']'  reduce 72
-	'}'  reduce 72
-	')'  reduce 72
-
-
-75: shift/reduce conflict (shift 80, reduce 77) on INC
-75: shift/reduce conflict (shift 81, reduce 77) on DEC
-state 75
-	expression : expression . '+' expression  (53)
-	expression : expression . '-' expression  (54)
-	expression : expression . '*' expression  (55)
-	expression : expression . '/' expression  (56)
-	expression : expression . '%' expression  (57)
-	expression : expression . '>' expression  (58)
-	expression : expression . '<' expression  (59)
-	expression : expression . GE expression  (60)
-	expression : expression . LE expression  (61)
-	expression : expression . EQ expression  (62)
-	expression : expression . NEQ expression  (63)
-	expression : expression . LAND expression  (64)
-	expression : expression . LOR expression  (65)
-	expression : expression . '|' expression  (66)
-	expression : expression . '^' expression  (67)
-	expression : expression . '&' expression  (68)
-	expression : expression . LSHIFT expression  (69)
-	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
-	expression : '*' expression .  (77)
-
-	INC  shift 80
-	DEC  shift 81
-	LAND  reduce 77
-	LOR  reduce 77
-	'|'  reduce 77
-	'^'  reduce 77
-	'&'  reduce 77
-	EQ  reduce 77
-	NEQ  reduce 77
-	'<'  reduce 77
-	'>'  reduce 77
-	GE  reduce 77
-	LE  reduce 77
-	LSHIFT  reduce 77
-	RSHIFT  reduce 77
-	'+'  reduce 77
-	'-'  reduce 77
-	'*'  reduce 77
-	'/'  reduce 77
-	'%'  reduce 77
-	';'  reduce 77
-	','  reduce 77
-	']'  reduce 77
-	'}'  reduce 77
-	')'  reduce 77
-
-
-state 76
-	expression : '(' type . ')' expression  (81)
-
-	')'  shift 111
+	'='  shift 83
+	LAND  shift 84
+	LOR  shift 85
+	'|'  shift 86
+	'^'  shift 87
+	'&'  shift 88
+	EQ  shift 89
+	NEQ  shift 90
+	'<'  shift 91
+	'>'  shift 92
+	GE  shift 93
+	LE  shift 94
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	']'  shift 104
 	.  error
 
 
-state 77
-	expression : expression . '+' expression  (53)
-	expression : expression . '-' expression  (54)
-	expression : expression . '*' expression  (55)
-	expression : expression . '/' expression  (56)
-	expression : expression . '%' expression  (57)
-	expression : expression . '>' expression  (58)
-	expression : expression . '<' expression  (59)
-	expression : expression . GE expression  (60)
-	expression : expression . LE expression  (61)
-	expression : expression . EQ expression  (62)
-	expression : expression . NEQ expression  (63)
-	expression : expression . LAND expression  (64)
-	expression : expression . LOR expression  (65)
-	expression : expression . '|' expression  (66)
-	expression : expression . '^' expression  (67)
-	expression : expression . '&' expression  (68)
-	expression : expression . LSHIFT expression  (69)
-	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
-	expression : '(' expression . ')'  (89)
+state 59
+	func_cfg : '(' ')' .  (44)
 
-	INC  shift 80
-	DEC  shift 81
-	LAND  shift 82
-	LOR  shift 83
-	'|'  shift 84
-	'^'  shift 85
-	'&'  shift 86
-	EQ  shift 87
-	NEQ  shift 88
-	'<'  shift 89
-	'>'  shift 90
-	GE  shift 91
-	LE  shift 92
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
-	')'  shift 112
+	.  reduce 44
+
+
+state 60
+	paras : type . ident ',' paras  (45)
+	paras : type . '*' ident ',' paras  (46)
+	paras : type . ident  (47)
+	paras : type . '*' ident  (48)
+
+	ident  shift 105
+	'*'  shift 106
 	.  error
 
 
-78: shift/reduce conflict (shift 80, reduce 82) on INC
-78: shift/reduce conflict (shift 81, reduce 82) on DEC
-state 78
-	expression : expression . '+' expression  (53)
-	expression : expression . '-' expression  (54)
-	expression : expression . '*' expression  (55)
-	expression : expression . '/' expression  (56)
-	expression : expression . '%' expression  (57)
-	expression : expression . '>' expression  (58)
-	expression : expression . '<' expression  (59)
-	expression : expression . GE expression  (60)
-	expression : expression . LE expression  (61)
-	expression : expression . EQ expression  (62)
-	expression : expression . NEQ expression  (63)
-	expression : expression . LAND expression  (64)
-	expression : expression . LOR expression  (65)
-	expression : expression . '|' expression  (66)
-	expression : expression . '^' expression  (67)
-	expression : expression . '&' expression  (68)
-	expression : expression . LSHIFT expression  (69)
-	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
-	expression : '!' expression .  (82)
+state 61
+	func_cfg : '(' paras . ')'  (43)
 
-	INC  shift 80
-	DEC  shift 81
-	LAND  reduce 82
-	LOR  reduce 82
-	'|'  reduce 82
-	'^'  reduce 82
-	'&'  reduce 82
-	EQ  reduce 82
-	NEQ  reduce 82
-	'<'  reduce 82
-	'>'  reduce 82
-	GE  reduce 82
-	LE  reduce 82
-	LSHIFT  reduce 82
-	RSHIFT  reduce 82
-	'+'  reduce 82
-	'-'  reduce 82
-	'*'  reduce 82
-	'/'  reduce 82
-	'%'  reduce 82
-	';'  reduce 82
-	','  reduce 82
-	']'  reduce 82
-	'}'  reduce 82
-	')'  reduce 82
+	')'  shift 107
+	.  error
 
 
-79: shift/reduce conflict (shift 80, reduce 83) on INC
-79: shift/reduce conflict (shift 81, reduce 83) on DEC
-state 79
-	expression : expression . '+' expression  (53)
-	expression : expression . '-' expression  (54)
-	expression : expression . '*' expression  (55)
-	expression : expression . '/' expression  (56)
-	expression : expression . '%' expression  (57)
-	expression : expression . '>' expression  (58)
-	expression : expression . '<' expression  (59)
-	expression : expression . GE expression  (60)
-	expression : expression . LE expression  (61)
-	expression : expression . EQ expression  (62)
-	expression : expression . NEQ expression  (63)
-	expression : expression . LAND expression  (64)
-	expression : expression . LOR expression  (65)
-	expression : expression . '|' expression  (66)
-	expression : expression . '^' expression  (67)
-	expression : expression . '&' expression  (68)
-	expression : expression . LSHIFT expression  (69)
-	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
-	expression : '~' expression .  (83)
+state 62
+	single_array : ident array_shape '=' . arr_content  (33)
 
-	INC  shift 80
-	DEC  shift 81
-	LAND  reduce 83
-	LOR  reduce 83
-	'|'  reduce 83
-	'^'  reduce 83
-	'&'  reduce 83
-	EQ  reduce 83
-	NEQ  reduce 83
-	'<'  reduce 83
-	'>'  reduce 83
-	GE  reduce 83
-	LE  reduce 83
-	LSHIFT  reduce 83
-	RSHIFT  reduce 83
-	'+'  reduce 83
-	'-'  reduce 83
-	'*'  reduce 83
-	'/'  reduce 83
-	'%'  reduce 83
-	';'  reduce 83
-	','  reduce 83
-	']'  reduce 83
-	'}'  reduce 83
-	')'  reduce 83
+	'{'  shift 108
+	.  error
+
+	arr_content  goto 109
 
 
-state 80
-	expression : expression INC .  (75)
+state 63
+	func_decl : type ident func_cfg ';' .  (41)
 
-	.  reduce 75
-
-
-state 81
-	expression : expression DEC .  (76)
-
-	.  reduce 76
+	.  reduce 41
 
 
-state 82
-	expression : expression LAND . expression  (64)
+state 64
+	func_decl : type '*' ident func_cfg . ';'  (42)
+
+	';'  shift 110
+	.  error
+
+
+state 65
+	single_ident : ident . '=' expression  (26)
+	single_ident : ident .  (27)
+
+	'='  shift 30
+	';'  reduce 27
+	','  reduce 27
+
+
+state 66
+	single_ident : '*' . ident  (28)
+
+	ident  shift 111
+	.  error
+
+
+state 67
+	idents : single_ident ',' idents .  (25)
+
+	.  reduce 25
+
+
+state 68
+	single_array : ident . array_shape  (32)
+	single_array : ident . array_shape '=' arr_content  (33)
+
+	'['  shift 31
+	.  error
+
+	array_shape  goto 33
+
+
+state 69
+	arrays : single_array ',' arrays .  (31)
+
+	.  reduce 31
+
+
+state 70
+	func_arg : '(' . ')'  (49)
+	func_arg : '(' . args ')'  (50)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -1444,81 +1044,132 @@ state 82
 	'-'  shift 49
 	'*'  shift 50
 	'('  shift 51
+	')'  shift 112
 	'!'  shift 52
 	'~'  shift 53
 	.  error
 
 	expression  goto 113
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
+	args  goto 114
+
+
+state 71
+	posfix_expr : ident array_shape .  (87)
+
+	.  reduce 87
+
+
+state 72
+	posfix_expr : ident func_arg .  (86)
+
+	.  reduce 86
+
+
+state 73
+	unary_expr : INC unary_expr .  (76)
+
+	.  reduce 76
+
+
+state 74
+	unary_expr : DEC unary_expr .  (77)
+
+	.  reduce 77
+
+
+state 75
+	unary_expr : '&' ident .  (79)
+
+	.  reduce 79
+
+
+state 76
+	unary_expr : '+' unary_expr .  (74)
+
+	.  reduce 74
+
+
+state 77
+	unary_expr : '-' unary_expr .  (75)
+
+	.  reduce 75
+
+
+state 78
+	unary_expr : '*' unary_expr .  (78)
+
+	.  reduce 78
+
+
+state 79
+	unary_expr : '(' type . ')' unary_expr  (80)
+
+	')'  shift 115
+	.  error
+
+
+state 80
+	expression : expression . '+' expression  (53)
+	expression : expression . '-' expression  (54)
+	expression : expression . '*' expression  (55)
+	expression : expression . '/' expression  (56)
+	expression : expression . '%' expression  (57)
+	expression : expression . '>' expression  (58)
+	expression : expression . '<' expression  (59)
+	expression : expression . GE expression  (60)
+	expression : expression . LE expression  (61)
+	expression : expression . EQ expression  (62)
+	expression : expression . NEQ expression  (63)
+	expression : expression . LAND expression  (64)
+	expression : expression . LOR expression  (65)
+	expression : expression . '|' expression  (66)
+	expression : expression . '^' expression  (67)
+	expression : expression . '&' expression  (68)
+	expression : expression . LSHIFT expression  (69)
+	expression : expression . RSHIFT expression  (70)
+	expression : expression . '=' expression  (71)
+	primary_expr : '(' expression . ')'  (93)
+
+	'='  shift 83
+	LAND  shift 84
+	LOR  shift 85
+	'|'  shift 86
+	'^'  shift 87
+	'&'  shift 88
+	EQ  shift 89
+	NEQ  shift 90
+	'<'  shift 91
+	'>'  shift 92
+	GE  shift 93
+	LE  shift 94
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	')'  shift 116
+	.  error
+
+
+state 81
+	unary_expr : '!' unary_expr .  (81)
+
+	.  reduce 81
+
+
+state 82
+	unary_expr : '~' unary_expr .  (82)
+
+	.  reduce 82
 
 
 state 83
-	expression : expression LOR . expression  (65)
-
-	NUM  shift 40
-	FLOAT  shift 41
-	CHAR_LIT  shift 42
-	STRING_LIT  shift 43
-	ident  shift 44
-	INC  shift 45
-	DEC  shift 46
-	'&'  shift 47
-	'+'  shift 48
-	'-'  shift 49
-	'*'  shift 50
-	'('  shift 51
-	'!'  shift 52
-	'~'  shift 53
-	.  error
-
-	expression  goto 114
-
-
-state 84
-	expression : expression '|' . expression  (66)
-
-	NUM  shift 40
-	FLOAT  shift 41
-	CHAR_LIT  shift 42
-	STRING_LIT  shift 43
-	ident  shift 44
-	INC  shift 45
-	DEC  shift 46
-	'&'  shift 47
-	'+'  shift 48
-	'-'  shift 49
-	'*'  shift 50
-	'('  shift 51
-	'!'  shift 52
-	'~'  shift 53
-	.  error
-
-	expression  goto 115
-
-
-state 85
-	expression : expression '^' . expression  (67)
-
-	NUM  shift 40
-	FLOAT  shift 41
-	CHAR_LIT  shift 42
-	STRING_LIT  shift 43
-	ident  shift 44
-	INC  shift 45
-	DEC  shift 46
-	'&'  shift 47
-	'+'  shift 48
-	'-'  shift 49
-	'*'  shift 50
-	'('  shift 51
-	'!'  shift 52
-	'~'  shift 53
-	.  error
-
-	expression  goto 116
-
-
-state 86
-	expression : expression '&' . expression  (68)
+	expression : expression '=' . expression  (71)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -1537,10 +1188,13 @@ state 86
 	.  error
 
 	expression  goto 117
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
-state 87
-	expression : expression EQ . expression  (62)
+state 84
+	expression : expression LAND . expression  (64)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -1559,10 +1213,13 @@ state 87
 	.  error
 
 	expression  goto 118
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
-state 88
-	expression : expression NEQ . expression  (63)
+state 85
+	expression : expression LOR . expression  (65)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -1581,10 +1238,13 @@ state 88
 	.  error
 
 	expression  goto 119
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
-state 89
-	expression : expression '<' . expression  (59)
+state 86
+	expression : expression '|' . expression  (66)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -1603,10 +1263,13 @@ state 89
 	.  error
 
 	expression  goto 120
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
-state 90
-	expression : expression '>' . expression  (58)
+state 87
+	expression : expression '^' . expression  (67)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -1625,10 +1288,13 @@ state 90
 	.  error
 
 	expression  goto 121
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
-state 91
-	expression : expression GE . expression  (60)
+state 88
+	expression : expression '&' . expression  (68)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -1647,10 +1313,13 @@ state 91
 	.  error
 
 	expression  goto 122
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
-state 92
-	expression : expression LE . expression  (61)
+state 89
+	expression : expression EQ . expression  (62)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -1669,10 +1338,13 @@ state 92
 	.  error
 
 	expression  goto 123
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
-state 93
-	expression : expression LSHIFT . expression  (69)
+state 90
+	expression : expression NEQ . expression  (63)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -1691,10 +1363,13 @@ state 93
 	.  error
 
 	expression  goto 124
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
-state 94
-	expression : expression RSHIFT . expression  (70)
+state 91
+	expression : expression '<' . expression  (59)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -1713,10 +1388,13 @@ state 94
 	.  error
 
 	expression  goto 125
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
-state 95
-	expression : expression '+' . expression  (53)
+state 92
+	expression : expression '>' . expression  (58)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -1735,10 +1413,13 @@ state 95
 	.  error
 
 	expression  goto 126
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
-state 96
-	expression : expression '-' . expression  (54)
+state 93
+	expression : expression GE . expression  (60)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -1757,10 +1438,13 @@ state 96
 	.  error
 
 	expression  goto 127
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
-state 97
-	expression : expression '*' . expression  (55)
+state 94
+	expression : expression LE . expression  (61)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -1779,10 +1463,13 @@ state 97
 	.  error
 
 	expression  goto 128
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
-state 98
-	expression : expression '/' . expression  (56)
+state 95
+	expression : expression LSHIFT . expression  (69)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -1801,10 +1488,13 @@ state 98
 	.  error
 
 	expression  goto 129
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
-state 99
-	expression : expression '%' . expression  (57)
+state 96
+	expression : expression RSHIFT . expression  (70)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -1823,9 +1513,149 @@ state 99
 	.  error
 
 	expression  goto 130
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
+
+
+state 97
+	expression : expression '+' . expression  (53)
+
+	NUM  shift 40
+	FLOAT  shift 41
+	CHAR_LIT  shift 42
+	STRING_LIT  shift 43
+	ident  shift 44
+	INC  shift 45
+	DEC  shift 46
+	'&'  shift 47
+	'+'  shift 48
+	'-'  shift 49
+	'*'  shift 50
+	'('  shift 51
+	'!'  shift 52
+	'~'  shift 53
+	.  error
+
+	expression  goto 131
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
+
+
+state 98
+	expression : expression '-' . expression  (54)
+
+	NUM  shift 40
+	FLOAT  shift 41
+	CHAR_LIT  shift 42
+	STRING_LIT  shift 43
+	ident  shift 44
+	INC  shift 45
+	DEC  shift 46
+	'&'  shift 47
+	'+'  shift 48
+	'-'  shift 49
+	'*'  shift 50
+	'('  shift 51
+	'!'  shift 52
+	'~'  shift 53
+	.  error
+
+	expression  goto 132
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
+
+
+state 99
+	expression : expression '*' . expression  (55)
+
+	NUM  shift 40
+	FLOAT  shift 41
+	CHAR_LIT  shift 42
+	STRING_LIT  shift 43
+	ident  shift 44
+	INC  shift 45
+	DEC  shift 46
+	'&'  shift 47
+	'+'  shift 48
+	'-'  shift 49
+	'*'  shift 50
+	'('  shift 51
+	'!'  shift 52
+	'~'  shift 53
+	.  error
+
+	expression  goto 133
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
 state 100
+	expression : expression '/' . expression  (56)
+
+	NUM  shift 40
+	FLOAT  shift 41
+	CHAR_LIT  shift 42
+	STRING_LIT  shift 43
+	ident  shift 44
+	INC  shift 45
+	DEC  shift 46
+	'&'  shift 47
+	'+'  shift 48
+	'-'  shift 49
+	'*'  shift 50
+	'('  shift 51
+	'!'  shift 52
+	'~'  shift 53
+	.  error
+
+	expression  goto 134
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
+
+
+state 101
+	expression : expression '%' . expression  (57)
+
+	NUM  shift 40
+	FLOAT  shift 41
+	CHAR_LIT  shift 42
+	STRING_LIT  shift 43
+	ident  shift 44
+	INC  shift 45
+	DEC  shift 46
+	'&'  shift 47
+	'+'  shift 48
+	'-'  shift 49
+	'*'  shift 50
+	'('  shift 51
+	'!'  shift 52
+	'~'  shift 53
+	.  error
+
+	expression  goto 135
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
+
+
+state 102
+	posfix_expr : posfix_expr INC .  (84)
+
+	.  reduce 84
+
+
+state 103
+	posfix_expr : posfix_expr DEC .  (85)
+
+	.  reduce 85
+
+
+state 104
 	array_shape : '[' expression ']' .  (34)
 	array_shape : '[' expression ']' . array_shape  (35)
 
@@ -1857,32 +1687,32 @@ state 100
 	'}'  reduce 34
 	')'  reduce 34
 
-	array_shape  goto 131
+	array_shape  goto 136
 
 
-state 101
+state 105
 	paras : type ident . ',' paras  (45)
 	paras : type ident .  (47)
 
-	','  shift 132
+	','  shift 137
 	')'  reduce 47
 
 
-state 102
+state 106
 	paras : type '*' . ident ',' paras  (46)
 	paras : type '*' . ident  (48)
 
-	ident  shift 133
+	ident  shift 138
 	.  error
 
 
-state 103
+state 107
 	func_cfg : '(' paras ')' .  (43)
 
 	.  reduce 43
 
 
-state 104
+state 108
 	arr_content : '{' . list_contents '}'  (36)
 
 	NUM  shift 40
@@ -1896,42 +1726,45 @@ state 104
 	'+'  shift 48
 	'-'  shift 49
 	'*'  shift 50
-	'{'  shift 104
+	'{'  shift 108
 	'('  shift 51
 	'!'  shift 52
 	'~'  shift 53
 	.  error
 
-	expression  goto 134
-	arr_content  goto 135
-	list_contents  goto 136
+	expression  goto 139
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
+	arr_content  goto 140
+	list_contents  goto 141
 
 
-state 105
+state 109
 	single_array : ident array_shape '=' arr_content .  (33)
 
 	.  reduce 33
 
 
-state 106
+state 110
 	func_decl : type '*' ident func_cfg ';' .  (42)
 
 	.  reduce 42
 
 
-state 107
+state 111
 	single_ident : '*' ident .  (28)
 
 	.  reduce 28
 
 
-state 108
+state 112
 	func_arg : '(' ')' .  (49)
 
 	.  reduce 49
 
 
-state 109
+state 113
 	args : expression . ',' args  (51)
 	args : expression .  (52)
 	expression : expression . '+' expression  (53)
@@ -1952,42 +1785,40 @@ state 109
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	LAND  shift 82
-	LOR  shift 83
-	'|'  shift 84
-	'^'  shift 85
-	'&'  shift 86
-	EQ  shift 87
-	NEQ  shift 88
-	'<'  shift 89
-	'>'  shift 90
-	GE  shift 91
-	LE  shift 92
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
-	','  shift 137
+	'='  shift 83
+	LAND  shift 84
+	LOR  shift 85
+	'|'  shift 86
+	'^'  shift 87
+	'&'  shift 88
+	EQ  shift 89
+	NEQ  shift 90
+	'<'  shift 91
+	'>'  shift 92
+	GE  shift 93
+	LE  shift 94
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	','  shift 142
 	')'  reduce 52
 
 
-state 110
+state 114
 	func_arg : '(' args . ')'  (50)
 
-	')'  shift 138
+	')'  shift 143
 	.  error
 
 
-state 111
-	expression : '(' type ')' . expression  (81)
+state 115
+	unary_expr : '(' type ')' . unary_expr  (80)
 
 	NUM  shift 40
 	FLOAT  shift 41
@@ -2005,18 +1836,66 @@ state 111
 	'~'  shift 53
 	.  error
 
-	expression  goto 139
+	unary_expr  goto 144
+	posfix_expr  goto 56
+	primary_expr  goto 57
 
 
-state 112
-	expression : '(' expression ')' .  (89)
+state 116
+	primary_expr : '(' expression ')' .  (93)
 
-	.  reduce 89
+	.  reduce 93
 
 
-113: shift/reduce conflict (shift 80, reduce 64) on INC
-113: shift/reduce conflict (shift 81, reduce 64) on DEC
-state 113
+state 117
+	expression : expression . '+' expression  (53)
+	expression : expression . '-' expression  (54)
+	expression : expression . '*' expression  (55)
+	expression : expression . '/' expression  (56)
+	expression : expression . '%' expression  (57)
+	expression : expression . '>' expression  (58)
+	expression : expression . '<' expression  (59)
+	expression : expression . GE expression  (60)
+	expression : expression . LE expression  (61)
+	expression : expression . EQ expression  (62)
+	expression : expression . NEQ expression  (63)
+	expression : expression . LAND expression  (64)
+	expression : expression . LOR expression  (65)
+	expression : expression . '|' expression  (66)
+	expression : expression . '^' expression  (67)
+	expression : expression . '&' expression  (68)
+	expression : expression . LSHIFT expression  (69)
+	expression : expression . RSHIFT expression  (70)
+	expression : expression . '=' expression  (71)
+	expression : expression '=' expression .  (71)
+
+	'='  shift 83
+	LAND  shift 84
+	LOR  shift 85
+	'|'  shift 86
+	'^'  shift 87
+	'&'  shift 88
+	EQ  shift 89
+	NEQ  shift 90
+	'<'  shift 91
+	'>'  shift 92
+	GE  shift 93
+	LE  shift 94
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	';'  reduce 71
+	','  reduce 71
+	']'  reduce 71
+	'}'  reduce 71
+	')'  reduce 71
+
+
+state 118
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2036,27 +1915,25 @@ state 113
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	'|'  shift 84
-	'^'  shift 85
-	'&'  shift 86
-	EQ  shift 87
-	NEQ  shift 88
-	'<'  shift 89
-	'>'  shift 90
-	GE  shift 91
-	LE  shift 92
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	'|'  shift 86
+	'^'  shift 87
+	'&'  shift 88
+	EQ  shift 89
+	NEQ  shift 90
+	'<'  shift 91
+	'>'  shift 92
+	GE  shift 93
+	LE  shift 94
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	'='  reduce 64
 	LAND  reduce 64
 	LOR  reduce 64
 	';'  reduce 64
@@ -2066,9 +1943,7 @@ state 113
 	')'  reduce 64
 
 
-114: shift/reduce conflict (shift 80, reduce 65) on INC
-114: shift/reduce conflict (shift 81, reduce 65) on DEC
-state 114
+state 119
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2088,28 +1963,26 @@ state 114
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	LAND  shift 82
-	'|'  shift 84
-	'^'  shift 85
-	'&'  shift 86
-	EQ  shift 87
-	NEQ  shift 88
-	'<'  shift 89
-	'>'  shift 90
-	GE  shift 91
-	LE  shift 92
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	LAND  shift 84
+	'|'  shift 86
+	'^'  shift 87
+	'&'  shift 88
+	EQ  shift 89
+	NEQ  shift 90
+	'<'  shift 91
+	'>'  shift 92
+	GE  shift 93
+	LE  shift 94
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	'='  reduce 65
 	LOR  reduce 65
 	';'  reduce 65
 	','  reduce 65
@@ -2118,9 +1991,7 @@ state 114
 	')'  reduce 65
 
 
-115: shift/reduce conflict (shift 80, reduce 66) on INC
-115: shift/reduce conflict (shift 81, reduce 66) on DEC
-state 115
+state 120
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2140,26 +2011,24 @@ state 115
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	'^'  shift 85
-	'&'  shift 86
-	EQ  shift 87
-	NEQ  shift 88
-	'<'  shift 89
-	'>'  shift 90
-	GE  shift 91
-	LE  shift 92
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	'^'  shift 87
+	'&'  shift 88
+	EQ  shift 89
+	NEQ  shift 90
+	'<'  shift 91
+	'>'  shift 92
+	GE  shift 93
+	LE  shift 94
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	'='  reduce 66
 	LAND  reduce 66
 	LOR  reduce 66
 	'|'  reduce 66
@@ -2170,9 +2039,7 @@ state 115
 	')'  reduce 66
 
 
-116: shift/reduce conflict (shift 80, reduce 67) on INC
-116: shift/reduce conflict (shift 81, reduce 67) on DEC
-state 116
+state 121
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2192,25 +2059,23 @@ state 116
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	'&'  shift 86
-	EQ  shift 87
-	NEQ  shift 88
-	'<'  shift 89
-	'>'  shift 90
-	GE  shift 91
-	LE  shift 92
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	'&'  shift 88
+	EQ  shift 89
+	NEQ  shift 90
+	'<'  shift 91
+	'>'  shift 92
+	GE  shift 93
+	LE  shift 94
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	'='  reduce 67
 	LAND  reduce 67
 	LOR  reduce 67
 	'|'  reduce 67
@@ -2222,9 +2087,7 @@ state 116
 	')'  reduce 67
 
 
-117: shift/reduce conflict (shift 80, reduce 68) on INC
-117: shift/reduce conflict (shift 81, reduce 68) on DEC
-state 117
+state 122
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2244,24 +2107,22 @@ state 117
 	expression : expression '&' expression .  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	EQ  shift 87
-	NEQ  shift 88
-	'<'  shift 89
-	'>'  shift 90
-	GE  shift 91
-	LE  shift 92
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	EQ  shift 89
+	NEQ  shift 90
+	'<'  shift 91
+	'>'  shift 92
+	GE  shift 93
+	LE  shift 94
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	'='  reduce 68
 	LAND  reduce 68
 	LOR  reduce 68
 	'|'  reduce 68
@@ -2274,9 +2135,7 @@ state 117
 	')'  reduce 68
 
 
-118: shift/reduce conflict (shift 80, reduce 62) on INC
-118: shift/reduce conflict (shift 81, reduce 62) on DEC
-state 118
+state 123
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2296,22 +2155,20 @@ state 118
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	'<'  shift 89
-	'>'  shift 90
-	GE  shift 91
-	LE  shift 92
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	'<'  shift 91
+	'>'  shift 92
+	GE  shift 93
+	LE  shift 94
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	'='  reduce 62
 	LAND  reduce 62
 	LOR  reduce 62
 	'|'  reduce 62
@@ -2326,9 +2183,7 @@ state 118
 	')'  reduce 62
 
 
-119: shift/reduce conflict (shift 80, reduce 63) on INC
-119: shift/reduce conflict (shift 81, reduce 63) on DEC
-state 119
+state 124
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2348,22 +2203,20 @@ state 119
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	'<'  shift 89
-	'>'  shift 90
-	GE  shift 91
-	LE  shift 92
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	'<'  shift 91
+	'>'  shift 92
+	GE  shift 93
+	LE  shift 94
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	'='  reduce 63
 	LAND  reduce 63
 	LOR  reduce 63
 	'|'  reduce 63
@@ -2378,9 +2231,7 @@ state 119
 	')'  reduce 63
 
 
-120: shift/reduce conflict (shift 80, reduce 59) on INC
-120: shift/reduce conflict (shift 81, reduce 59) on DEC
-state 120
+state 125
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2400,18 +2251,16 @@ state 120
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	'='  reduce 59
 	LAND  reduce 59
 	LOR  reduce 59
 	'|'  reduce 59
@@ -2430,9 +2279,7 @@ state 120
 	')'  reduce 59
 
 
-121: shift/reduce conflict (shift 80, reduce 58) on INC
-121: shift/reduce conflict (shift 81, reduce 58) on DEC
-state 121
+state 126
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2452,18 +2299,16 @@ state 121
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	'='  reduce 58
 	LAND  reduce 58
 	LOR  reduce 58
 	'|'  reduce 58
@@ -2482,9 +2327,7 @@ state 121
 	')'  reduce 58
 
 
-122: shift/reduce conflict (shift 80, reduce 60) on INC
-122: shift/reduce conflict (shift 81, reduce 60) on DEC
-state 122
+state 127
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2504,18 +2347,16 @@ state 122
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	'='  reduce 60
 	LAND  reduce 60
 	LOR  reduce 60
 	'|'  reduce 60
@@ -2534,9 +2375,7 @@ state 122
 	')'  reduce 60
 
 
-123: shift/reduce conflict (shift 80, reduce 61) on INC
-123: shift/reduce conflict (shift 81, reduce 61) on DEC
-state 123
+state 128
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2556,18 +2395,16 @@ state 123
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	'='  reduce 61
 	LAND  reduce 61
 	LOR  reduce 61
 	'|'  reduce 61
@@ -2586,9 +2423,7 @@ state 123
 	')'  reduce 61
 
 
-124: shift/reduce conflict (shift 80, reduce 69) on INC
-124: shift/reduce conflict (shift 81, reduce 69) on DEC
-state 124
+state 129
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2608,16 +2443,14 @@ state 124
 	expression : expression . LSHIFT expression  (69)
 	expression : expression LSHIFT expression .  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	'='  reduce 69
 	LAND  reduce 69
 	LOR  reduce 69
 	'|'  reduce 69
@@ -2638,9 +2471,7 @@ state 124
 	')'  reduce 69
 
 
-125: shift/reduce conflict (shift 80, reduce 70) on INC
-125: shift/reduce conflict (shift 81, reduce 70) on DEC
-state 125
+state 130
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2660,16 +2491,14 @@ state 125
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
 	expression : expression RSHIFT expression .  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	'='  reduce 70
 	LAND  reduce 70
 	LOR  reduce 70
 	'|'  reduce 70
@@ -2690,9 +2519,7 @@ state 125
 	')'  reduce 70
 
 
-126: shift/reduce conflict (shift 80, reduce 53) on INC
-126: shift/reduce conflict (shift 81, reduce 53) on DEC
-state 126
+state 131
 	expression : expression . '+' expression  (53)
 	expression : expression '+' expression .  (53)
 	expression : expression . '-' expression  (54)
@@ -2712,14 +2539,12 @@ state 126
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	'='  reduce 53
 	LAND  reduce 53
 	LOR  reduce 53
 	'|'  reduce 53
@@ -2742,9 +2567,7 @@ state 126
 	')'  reduce 53
 
 
-127: shift/reduce conflict (shift 80, reduce 54) on INC
-127: shift/reduce conflict (shift 81, reduce 54) on DEC
-state 127
+state 132
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression '-' expression .  (54)
@@ -2764,14 +2587,12 @@ state 127
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	'='  reduce 54
 	LAND  reduce 54
 	LOR  reduce 54
 	'|'  reduce 54
@@ -2794,9 +2615,7 @@ state 127
 	')'  reduce 54
 
 
-128: shift/reduce conflict (shift 80, reduce 55) on INC
-128: shift/reduce conflict (shift 81, reduce 55) on DEC
-state 128
+state 133
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2816,39 +2635,12 @@ state 128
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	LAND  reduce 55
-	LOR  reduce 55
-	'|'  reduce 55
-	'^'  reduce 55
-	'&'  reduce 55
-	EQ  reduce 55
-	NEQ  reduce 55
-	'<'  reduce 55
-	'>'  reduce 55
-	GE  reduce 55
-	LE  reduce 55
-	LSHIFT  reduce 55
-	RSHIFT  reduce 55
-	'+'  reduce 55
-	'-'  reduce 55
-	'*'  reduce 55
-	'/'  reduce 55
-	'%'  reduce 55
-	';'  reduce 55
-	','  reduce 55
-	']'  reduce 55
-	'}'  reduce 55
-	')'  reduce 55
+	.  reduce 55
 
 
-129: shift/reduce conflict (shift 80, reduce 56) on INC
-129: shift/reduce conflict (shift 81, reduce 56) on DEC
-state 129
+state 134
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2868,39 +2660,12 @@ state 129
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	LAND  reduce 56
-	LOR  reduce 56
-	'|'  reduce 56
-	'^'  reduce 56
-	'&'  reduce 56
-	EQ  reduce 56
-	NEQ  reduce 56
-	'<'  reduce 56
-	'>'  reduce 56
-	GE  reduce 56
-	LE  reduce 56
-	LSHIFT  reduce 56
-	RSHIFT  reduce 56
-	'+'  reduce 56
-	'-'  reduce 56
-	'*'  reduce 56
-	'/'  reduce 56
-	'%'  reduce 56
-	';'  reduce 56
-	','  reduce 56
-	']'  reduce 56
-	'}'  reduce 56
-	')'  reduce 56
+	.  reduce 56
 
 
-130: shift/reduce conflict (shift 80, reduce 57) on INC
-130: shift/reduce conflict (shift 81, reduce 57) on DEC
-state 130
+state 135
 	expression : expression . '+' expression  (53)
 	expression : expression . '-' expression  (54)
 	expression : expression . '*' expression  (55)
@@ -2920,43 +2685,18 @@ state 130
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	LAND  reduce 57
-	LOR  reduce 57
-	'|'  reduce 57
-	'^'  reduce 57
-	'&'  reduce 57
-	EQ  reduce 57
-	NEQ  reduce 57
-	'<'  reduce 57
-	'>'  reduce 57
-	GE  reduce 57
-	LE  reduce 57
-	LSHIFT  reduce 57
-	RSHIFT  reduce 57
-	'+'  reduce 57
-	'-'  reduce 57
-	'*'  reduce 57
-	'/'  reduce 57
-	'%'  reduce 57
-	';'  reduce 57
-	','  reduce 57
-	']'  reduce 57
-	'}'  reduce 57
-	')'  reduce 57
+	.  reduce 57
 
 
-state 131
+state 136
 	array_shape : '[' expression ']' array_shape .  (35)
 
 	.  reduce 35
 
 
-state 132
+state 137
 	paras : type ident ',' . paras  (45)
 
 	SHORT_TYPE  shift 2
@@ -2972,22 +2712,22 @@ state 132
 	UNSIGNED  shift 12
 	.  error
 
-	type  goto 57
+	type  goto 60
 	non_const  goto 14
 	integer  goto 15
 	int_size  goto 16
-	paras  goto 140
+	paras  goto 145
 
 
-state 133
+state 138
 	paras : type '*' ident . ',' paras  (46)
 	paras : type '*' ident .  (48)
 
-	','  shift 141
+	','  shift 146
 	')'  reduce 48
 
 
-state 134
+state 139
 	list_contents : expression . ',' list_contents  (38)
 	list_contents : expression .  (40)
 	expression : expression . '+' expression  (53)
@@ -3008,49 +2748,47 @@ state 134
 	expression : expression . '&' expression  (68)
 	expression : expression . LSHIFT expression  (69)
 	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
+	expression : expression . '=' expression  (71)
 
-	INC  shift 80
-	DEC  shift 81
-	LAND  shift 82
-	LOR  shift 83
-	'|'  shift 84
-	'^'  shift 85
-	'&'  shift 86
-	EQ  shift 87
-	NEQ  shift 88
-	'<'  shift 89
-	'>'  shift 90
-	GE  shift 91
-	LE  shift 92
-	LSHIFT  shift 93
-	RSHIFT  shift 94
-	'+'  shift 95
-	'-'  shift 96
-	'*'  shift 97
-	'/'  shift 98
-	'%'  shift 99
-	','  shift 142
+	'='  shift 83
+	LAND  shift 84
+	LOR  shift 85
+	'|'  shift 86
+	'^'  shift 87
+	'&'  shift 88
+	EQ  shift 89
+	NEQ  shift 90
+	'<'  shift 91
+	'>'  shift 92
+	GE  shift 93
+	LE  shift 94
+	LSHIFT  shift 95
+	RSHIFT  shift 96
+	'+'  shift 97
+	'-'  shift 98
+	'*'  shift 99
+	'/'  shift 100
+	'%'  shift 101
+	','  shift 147
 	'}'  reduce 40
 
 
-state 135
+state 140
 	list_contents : arr_content . ',' list_contents  (37)
 	list_contents : arr_content .  (39)
 
-	','  shift 143
+	','  shift 148
 	'}'  reduce 39
 
 
-state 136
+state 141
 	arr_content : '{' list_contents . '}'  (36)
 
-	'}'  shift 144
+	'}'  shift 149
 	.  error
 
 
-state 137
+state 142
 	args : expression ',' . args  (51)
 
 	NUM  shift 40
@@ -3069,75 +2807,32 @@ state 137
 	'~'  shift 53
 	.  error
 
-	expression  goto 109
-	args  goto 145
+	expression  goto 113
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
+	args  goto 150
 
 
-state 138
+state 143
 	func_arg : '(' args ')' .  (50)
 
 	.  reduce 50
 
 
-139: shift/reduce conflict (shift 80, reduce 81) on INC
-139: shift/reduce conflict (shift 81, reduce 81) on DEC
-state 139
-	expression : expression . '+' expression  (53)
-	expression : expression . '-' expression  (54)
-	expression : expression . '*' expression  (55)
-	expression : expression . '/' expression  (56)
-	expression : expression . '%' expression  (57)
-	expression : expression . '>' expression  (58)
-	expression : expression . '<' expression  (59)
-	expression : expression . GE expression  (60)
-	expression : expression . LE expression  (61)
-	expression : expression . EQ expression  (62)
-	expression : expression . NEQ expression  (63)
-	expression : expression . LAND expression  (64)
-	expression : expression . LOR expression  (65)
-	expression : expression . '|' expression  (66)
-	expression : expression . '^' expression  (67)
-	expression : expression . '&' expression  (68)
-	expression : expression . LSHIFT expression  (69)
-	expression : expression . RSHIFT expression  (70)
-	expression : expression . INC  (75)
-	expression : expression . DEC  (76)
-	expression : '(' type ')' expression .  (81)
+state 144
+	unary_expr : '(' type ')' unary_expr .  (80)
 
-	INC  shift 80
-	DEC  shift 81
-	LAND  reduce 81
-	LOR  reduce 81
-	'|'  reduce 81
-	'^'  reduce 81
-	'&'  reduce 81
-	EQ  reduce 81
-	NEQ  reduce 81
-	'<'  reduce 81
-	'>'  reduce 81
-	GE  reduce 81
-	LE  reduce 81
-	LSHIFT  reduce 81
-	RSHIFT  reduce 81
-	'+'  reduce 81
-	'-'  reduce 81
-	'*'  reduce 81
-	'/'  reduce 81
-	'%'  reduce 81
-	';'  reduce 81
-	','  reduce 81
-	']'  reduce 81
-	'}'  reduce 81
-	')'  reduce 81
+	.  reduce 80
 
 
-state 140
+state 145
 	paras : type ident ',' paras .  (45)
 
 	.  reduce 45
 
 
-state 141
+state 146
 	paras : type '*' ident ',' . paras  (46)
 
 	SHORT_TYPE  shift 2
@@ -3153,14 +2848,14 @@ state 141
 	UNSIGNED  shift 12
 	.  error
 
-	type  goto 57
+	type  goto 60
 	non_const  goto 14
 	integer  goto 15
 	int_size  goto 16
-	paras  goto 146
+	paras  goto 151
 
 
-state 142
+state 147
 	list_contents : expression ',' . list_contents  (38)
 
 	NUM  shift 40
@@ -3174,18 +2869,21 @@ state 142
 	'+'  shift 48
 	'-'  shift 49
 	'*'  shift 50
-	'{'  shift 104
+	'{'  shift 108
 	'('  shift 51
 	'!'  shift 52
 	'~'  shift 53
 	.  error
 
-	expression  goto 134
-	arr_content  goto 135
-	list_contents  goto 147
+	expression  goto 139
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
+	arr_content  goto 140
+	list_contents  goto 152
 
 
-state 143
+state 148
 	list_contents : arr_content ',' . list_contents  (37)
 
 	NUM  shift 40
@@ -3199,77 +2897,52 @@ state 143
 	'+'  shift 48
 	'-'  shift 49
 	'*'  shift 50
-	'{'  shift 104
+	'{'  shift 108
 	'('  shift 51
 	'!'  shift 52
 	'~'  shift 53
 	.  error
 
-	expression  goto 134
-	arr_content  goto 135
-	list_contents  goto 148
+	expression  goto 139
+	unary_expr  goto 55
+	posfix_expr  goto 56
+	primary_expr  goto 57
+	arr_content  goto 140
+	list_contents  goto 153
 
 
-state 144
+state 149
 	arr_content : '{' list_contents '}' .  (36)
 
 	.  reduce 36
 
 
-state 145
+state 150
 	args : expression ',' args .  (51)
 
 	.  reduce 51
 
 
-state 146
+state 151
 	paras : type '*' ident ',' paras .  (46)
 
 	.  reduce 46
 
 
-state 147
+state 152
 	list_contents : expression ',' list_contents .  (38)
 
 	.  reduce 38
 
 
-state 148
+state 153
 	list_contents : arr_content ',' list_contents .  (37)
 
 	.  reduce 37
 
 
-State 70 contains 2 shift/reduce conflicts.
-State 71 contains 2 shift/reduce conflicts.
-State 73 contains 2 shift/reduce conflicts.
-State 74 contains 2 shift/reduce conflicts.
-State 75 contains 2 shift/reduce conflicts.
-State 78 contains 2 shift/reduce conflicts.
-State 79 contains 2 shift/reduce conflicts.
-State 113 contains 2 shift/reduce conflicts.
-State 114 contains 2 shift/reduce conflicts.
-State 115 contains 2 shift/reduce conflicts.
-State 116 contains 2 shift/reduce conflicts.
-State 117 contains 2 shift/reduce conflicts.
-State 118 contains 2 shift/reduce conflicts.
-State 119 contains 2 shift/reduce conflicts.
-State 120 contains 2 shift/reduce conflicts.
-State 121 contains 2 shift/reduce conflicts.
-State 122 contains 2 shift/reduce conflicts.
-State 123 contains 2 shift/reduce conflicts.
-State 124 contains 2 shift/reduce conflicts.
-State 125 contains 2 shift/reduce conflicts.
-State 126 contains 2 shift/reduce conflicts.
-State 127 contains 2 shift/reduce conflicts.
-State 128 contains 2 shift/reduce conflicts.
-State 129 contains 2 shift/reduce conflicts.
-State 130 contains 2 shift/reduce conflicts.
-State 139 contains 2 shift/reduce conflicts.
-
-
-61 terminals, 21 nonterminals
-90 grammar rules, 149 states
+61 terminals, 24 nonterminals
+94 grammar rules, 154 states
 
 grammar parser grammar
 symbol# value# symbol
@@ -3312,14 +2985,14 @@ symbol# value# symbol
     36     42  '*'
     37     47  '/'
     38     37  '%'
-    39    283  PREFIX
-    40    284  UMINUS
-    41    285  UPLUS
+    39    283  ADDR
+    40    284  DEREFERENCE
+    41    285  TYPE_CAST
     42    286  LOG_NOT
     43    287  BIT_NOT
-    44    288  TYPE_CAST
-    45    289  DEREFERENCE
-    46    290  ADDR
+    44    288  UMINUS
+    45    289  UPLUS
+    46    290  PREFIX
     47    291  SUFFIX
     48    292  FUNC_CALL
     49    293  ARR_SUB
@@ -3344,14 +3017,17 @@ symbol# value# symbol
     68    302  idents
     69    303  single_ident
     70    304  expression
-    71    305  array_decl
-    72    306  arrays
-    73    307  single_array
-    74    308  array_shape
-    75    309  arr_content
-    76    310  list_contents
-    77    311  func_decl
-    78    312  func_cfg
-    79    313  paras
-    80    314  func_arg
-    81    315  args
+    71    305  unary_expr
+    72    306  posfix_expr
+    73    307  primary_expr
+    74    308  array_decl
+    75    309  arrays
+    76    310  single_array
+    77    311  array_shape
+    78    312  arr_content
+    79    313  list_contents
+    80    314  func_decl
+    81    315  func_cfg
+    82    316  paras
+    83    317  func_arg
+    84    318  args
