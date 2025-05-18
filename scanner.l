@@ -109,7 +109,7 @@ NULL|__COUNTER__|__LINE__|INT_MAX|INT_MIN|CHAR_MAX|CHAR_MIN|MAX|MIN {
 	yylval.dVal = atof(yytext); 
 	return FLOAT; 
 }
-[\+\-\*/=%<>&!|]  { 
+[\+\-\*/=%<>&!|^~]  { 
 	return yytext[0]; 
 }
 \-\- {
@@ -118,8 +118,29 @@ NULL|__COUNTER__|__LINE__|INT_MAX|INT_MIN|CHAR_MAX|CHAR_MIN|MAX|MIN {
 \+\+ {
 	return INC; 
 }
->=|<=|==|!=|&&|\|\| { 
-	return yytext[0]; 
+">=" {
+	return GE; 
+}
+"<=" {
+	return LE; 
+}
+"==" {
+	return EQ; 
+}
+"!=" {
+	return NEQ; 
+}
+"&&" {
+	return LAND; 
+}
+"||" {
+	return LOR; 
+}
+"<<" {
+	return LSHIFT; 
+} 
+">>" {
+	return RSHIFT; 
 }
 [:;,.\[\]{}()] {
 	return yytext[0]; 

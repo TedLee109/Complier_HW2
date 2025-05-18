@@ -4,7 +4,7 @@
 #include <string.h>
 extern int yylex(void);
 int yyerror(char *s);
-#define MAX_LEN 1500
+#define MAX_LEN 1024
 %}
 %union {
 	int intVal;
@@ -27,18 +27,33 @@ int yyerror(char *s);
 %token<typeName>  SIGNED
 %token<typeName>  UNSIGNED
 
-%token<intVal> ID NUM '='
+%token<intVal> NUM '='
 %token<dVal> FLOAT
 %token<char_const> CHAR_LIT
 %token<string_const> STRING_LIT
 %token<idName> ident
-%token INC DEC
+%token INC DEC LAND LOR
 %type<typeName> type non_const integer int_size
 %type<tree> scalar_decl idents single_ident expression array_decl arrays single_array array_shape arr_content list_contents func_decl func_cfg paras func_arg args
+
+%right '='
+%left LOR 
+%left LAND
+%left '|'
+%left '^'
+%left '&'
+%left EQ NEQ
+%left '<' '>' GE LE
+%left LSHIFT RSHIFT
 %left '+' '-'
 %left '*' '/' '%'
-%nonassoc PRE_INC PRE_DEC DEREFERENCE ADDR TYPE_CAST UMINUS UPLUS 
-%nonassoc SUF_INC SUF_DEC FUNC_CALL ARR_SUB GROUP
+%right ADDR  
+%right DEREFERENCE
+%right TYPE_CAST
+%right LOG_NOT BIT_NOT
+%right UMINUS UPLUS
+%right PREFIX 
+%left SUFFIX FUNC_CALL ARR_SUB GROUP
 %%
 
 program: /* empty */
@@ -308,6 +323,90 @@ expression: expression '+' expression
 		sprintf(buffer, "<expr>%s%%%s</expr>", $1, $3);
 		$$ = strdup(buffer);
 	}
+	| expression '>' expression 
+	{
+		char buffer[MAX_LEN];
+		sprintf(buffer, "<expr>%s>%s</expr>", $1, $3);
+		$$ = strdup(buffer);
+	}
+	| expression '<' expression
+	{
+		char buffer[MAX_LEN];
+		sprintf(buffer, "<expr>%s<%s</expr>", $1, $3);
+		$$ = strdup(buffer);
+	}
+	| expression GE expression 
+	{
+		char buffer[MAX_LEN];
+		sprintf(buffer, "<expr>%s>=%s</expr>", $1, $3);
+		$$ = strdup(buffer);
+	}
+	| expression LE expression
+	{
+		char buffer[MAX_LEN];
+		sprintf(buffer, "<expr>%s<=%s</expr>", $1, $3);
+		$$ = strdup(buffer);
+	}
+	| expression EQ expression 
+	{
+		char buffer[MAX_LEN];
+		sprintf(buffer, "<expr>%s==%s</expr>", $1, $3);
+		$$ = strdup(buffer);
+	}
+	| expression NEQ expression
+	{
+		char buffer[MAX_LEN];
+		sprintf(buffer, "<expr>%s!=%s</expr>", $1, $3);
+		$$ = strdup(buffer);
+	}
+	| expression LAND expression 
+	{
+		char buffer[MAX_LEN];
+		sprintf(buffer, "<expr>%s&&%s</expr>", $1, $3);
+		$$ = strdup(buffer);
+	}
+	| expression LOR expression
+	{
+		char buffer[MAX_LEN];
+		sprintf(buffer, "<expr>%s||%s</expr>", $1, $3);
+		$$ = strdup(buffer);
+	}
+	| expression '|' expression
+	{
+		char buffer[MAX_LEN];
+		sprintf(buffer, "<expr>%s|%s</expr>", $1, $3);
+		$$ = strdup(buffer);
+	} 
+	| expression '^' expression 
+	{
+		char buffer[MAX_LEN];
+		sprintf(buffer, "<expr>%s^%s</expr>", $1, $3);
+		$$ = strdup(buffer);
+	} 
+	| expression '&' expression
+	{
+		char buffer[MAX_LEN];
+		sprintf(buffer, "<expr>%s&%s</expr>", $1, $3);
+		$$ = strdup(buffer);
+	}
+	| expression LSHIFT expression
+	{
+		char buffer[MAX_LEN];
+		sprintf(buffer, "<expr>%s<<%s</expr>", $1, $3);
+		$$ = strdup(buffer);
+	}
+	| expression RSHIFT expression 
+	{
+		char buffer[MAX_LEN];
+		sprintf(buffer, "<expr>%s>>%s</expr>", $1, $3);
+		$$ = strdup(buffer);
+	}
+	| expression '=' expression
+	{
+		char buffer[MAX_LEN];
+		sprintf(buffer, "<expr>%s=%s</expr>", $1, $3);
+		$$ = strdup(buffer);
+	}
 	| '+' expression %prec UPLUS
 	{
 		char buffer[1024];
@@ -320,28 +419,28 @@ expression: expression '+' expression
 		sprintf(buffer, "<expr>-%s</expr>", $2);
 		$$ = strdup(buffer);
 	}
-	| INC ident %prec PRE_INC 
+	| INC expression %prec PREFIX
 	{
 		char buffer[1024];
-		sprintf(buffer, "<expr>++<expr>%s</expr></expr>", $2);
+		sprintf(buffer, "<expr>++%s</expr>", $2);
 		$$ = strdup(buffer);
 	}
-	| DEC ident %prec PRE_DEC
+	| DEC expression %prec PREFIX
 	{
 		char buffer[1024];
-		sprintf(buffer, "<expr>--<expr>%s</expr></expr>", $2);
+		sprintf(buffer, "<expr>--%s</expr>", $2);
 		$$ = strdup(buffer);
 	}
-	| ident INC %prec SUF_INC
+	| expression INC %prec SUFFIX
 	{
 		char buffer[MAX_LEN]; 
-		sprintf(buffer, "<expr><expr>%s</expr>++</expr>", $1); 
+		sprintf(buffer, "<expr>%s++</expr>", $1); 
 		$$ = strdup(buffer); 
 	}
-	| ident DEC %prec SUF_DEC
+	| expression DEC %prec SUFFIX
 	{
 		char buffer[MAX_LEN]; 
-		sprintf(buffer, "<expr><expr>%s</expr>--</expr>", $1); 
+		sprintf(buffer, "<expr>%s--</expr>", $1); 
 		$$ = strdup(buffer); 
 	}
 	| '*' expression %prec DEREFERENCE
@@ -372,6 +471,18 @@ expression: expression '+' expression
 	{
 		char buffer[MAX_LEN]; 
 		sprintf(buffer, "<expr>(%s)%s</expr>", $2, $4);
+		$$ = strdup(buffer); 
+	}
+	| '!' expression %prec LOG_NOT
+	{
+		char buffer[MAX_LEN]; 
+		sprintf(buffer, "<expr>!%s</expr>", $2);
+		$$ = strdup(buffer); 
+	}
+	| '~' expression %prec BIT_NOT
+	{
+		char buffer[MAX_LEN]; 
+		sprintf(buffer, "<expr>~%s</expr>", $2);
 		$$ = strdup(buffer); 
 	}
 	| NUM 
