@@ -50,7 +50,16 @@ if {
 else {
 	return ELSE; 
 }
-for|do|while|break|continue|return|struct|switch|case|default    { 
+switch {
+	return SWITCH; 
+}
+case {
+	return CASE; 
+}
+default {
+	return DEFAULT;
+}
+for|do|while|break|continue|return|struct    { 
 	if(token) printf("#key:%s\n", yytext); 
 	store(yytext); 
 }

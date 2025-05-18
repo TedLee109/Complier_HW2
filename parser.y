@@ -32,9 +32,9 @@ int yyerror(char *s);
 %token<char_const> CHAR_LIT
 %token<string_const> STRING_LIT
 %token<idName> ident
-%token INC DEC LAND LOR IF ELSE
+%token INC DEC LAND LOR IF ELSE SWITCH CASE DEFAULT
 %type<typeName> type non_const integer int_size
-%type<tree> scalar_decl idents single_ident expression unary_expr posfix_expr primary_expr array_decl arrays single_array array_shape arr_content list_contents func_decl func_cfg paras func_arg args func_def compound_stmt  stmts_decls decl stmt expr_stmt if_else_stmt
+%type<tree> scalar_decl idents single_ident expression unary_expr posfix_expr primary_expr array_decl arrays single_array array_shape arr_content list_contents func_decl func_cfg paras func_arg args func_def compound_stmt  stmts_decls decl stmt expr_stmt if_else_stmt switch_stmts switch_clauses switch_stmt
 
 %right '='
 %left LOR 
@@ -357,6 +357,12 @@ stmt:
 			sprintf(buffer, "<stmt>%s</stmt>", $1);
 			$$ = strdup(buffer);
 		}
+	| switch_stmt
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "<stmt>%s</stmt>", $1);
+			$$ = strdup(buffer);
+		}
 	; 
 expr_stmt: 
 	expression ';' 
@@ -379,6 +385,80 @@ if_else_stmt:
 			sprintf(buffer, "if(%s)%selse%s", $3, $5, $7);
 			$$ = strdup(buffer);
 		}
+	;
+switch_stmt: 
+	SWITCH '(' expression ')' '{' switch_clauses '}'
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "switch(%s){%s}", $3, $6);
+			$$ = strdup(buffer);
+		}
+	| SWITCH '(' expression ')' '{'  '}'
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "switch(%s){}", $3);
+			$$ = strdup(buffer);
+		}
+	; 
+switch_clauses: 
+	CASE expression ':' switch_stmts switch_clauses
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "case%s:%s%s", $2, $4, $5);
+			$$ = strdup(buffer);
+		}
+	| CASE expression ':' switch_clauses
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "case%s:%s", $2, $4);
+			$$ = strdup(buffer);
+		}
+	| DEFAULT ':' switch_stmts switch_clauses
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "default:%s%s", $3, $4);
+			$$ = strdup(buffer);
+		}
+	| DEFAULT ':' switch_clauses
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "default:%s", $3);
+			$$ = strdup(buffer);
+		}
+	| CASE expression ':' switch_stmts 
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "case%s:%s", $2, $4);
+			$$ = strdup(buffer);
+		}
+	| CASE expression ':'
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "case%s:", $2);
+			$$ = strdup(buffer);
+		}
+	| DEFAULT ':' switch_stmts
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "default:%s", $3);
+			$$ = strdup(buffer);
+		}
+	| DEFAULT ':'
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "default:");
+			$$ = strdup(buffer);
+		}
+	;
+switch_stmts: 
+	stmt switch_stmts
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "%s%s", $1, $2);
+			$$ = strdup(buffer);
+		}
+	| stmt 
+		{$$ = $1;}
 	;
 expression: expression '+' expression 
 	{ 

@@ -1,11 +1,14 @@
 int a() {
-    if (a == 0) {
-        2 + 6; 
-        if (a < 5) {
-            8; 
-        } else {
-            9; 
-        }
+    switch (3)
+	{
+         case 5: 
+			2 + 3; 
+			if (a == 0) {}
+			switch (5) {}
+		 case 6:
+			if (a == 0) {}
+			else {} 
+		 default: *8 + a(); default:
     }
-    if (3) {}
 }
+
