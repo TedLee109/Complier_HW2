@@ -32,9 +32,9 @@ int yyerror(char *s);
 %token<char_const> CHAR_LIT
 %token<string_const> STRING_LIT
 %token<idName> ident
-%token INC DEC LAND LOR IF ELSE SWITCH CASE DEFAULT
+%token INC DEC LAND LOR IF ELSE SWITCH CASE DEFAULT WHILE DO
 %type<typeName> type non_const integer int_size
-%type<tree> scalar_decl idents single_ident expression unary_expr posfix_expr primary_expr array_decl arrays single_array array_shape arr_content list_contents func_decl func_cfg paras func_arg args func_def compound_stmt  stmts_decls decl stmt expr_stmt if_else_stmt switch_stmts switch_clauses switch_stmt
+%type<tree> scalar_decl idents single_ident expression unary_expr posfix_expr primary_expr array_decl arrays single_array array_shape arr_content list_contents func_decl func_cfg paras func_arg args func_def compound_stmt  stmts_decls decl stmt expr_stmt if_else_stmt switch_stmts switch_clauses switch_stmt while_stmt
 
 %right '='
 %left LOR 
@@ -363,6 +363,18 @@ stmt:
 			sprintf(buffer, "<stmt>%s</stmt>", $1);
 			$$ = strdup(buffer);
 		}
+	| while_stmt 
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "<stmt>%s</stmt>", $1);
+			$$ = strdup(buffer);
+		}
+	| compound_stmt
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "<stmt>%s</stmt>", $1);
+			$$ = strdup(buffer);
+		}
 	; 
 expr_stmt: 
 	expression ';' 
@@ -460,6 +472,20 @@ switch_stmts:
 	| stmt 
 		{$$ = $1;}
 	;
+while_stmt: 
+	WHILE '(' expression ')' stmt 
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "while(%s)%s", $3, $5);
+			$$ = strdup(buffer);
+		}
+	| DO stmt WHILE '(' expression ')' ';'
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "do%swhile(%s);", $2, $5);
+			$$ = strdup(buffer);
+		}
+	; 
 expression: expression '+' expression 
 	{ 
 		char buffer[1024];

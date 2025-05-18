@@ -59,7 +59,13 @@ case {
 default {
 	return DEFAULT;
 }
-for|do|while|break|continue|return|struct    { 
+do {
+	return DO; 
+}
+while {
+	return WHILE; 
+}
+for|break|continue|return|struct    { 
 	if(token) printf("#key:%s\n", yytext); 
 	store(yytext); 
 }
