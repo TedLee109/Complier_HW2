@@ -3,7 +3,8 @@ parser: y.tab.c lex.yy.c
 
 y.tab.c y.tab.h: parser.y
 	yacc -d parser.y
-
+scanner: lex.yy.c y.tab.c y.tab.h
+	gcc -o $@ $^
 lex.yy.c: scanner.l
 	flex scanner.l
 
