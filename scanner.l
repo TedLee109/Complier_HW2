@@ -68,7 +68,16 @@ while {
 for {
 	return FOR; 
 }
-break|continue|return|struct    { 
+return {
+	return RETURN; 
+}
+break {
+	return BREAK; 
+}
+continue {
+	return CONTINUE; 
+}
+struct    { 
 	if(token) printf("#key:%s\n", yytext); 
 	store(yytext); 
 }

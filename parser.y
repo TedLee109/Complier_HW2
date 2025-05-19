@@ -32,9 +32,9 @@ int yyerror(char *s);
 %token<char_const> CHAR_LIT
 %token<string_const> STRING_LIT
 %token<idName> ident
-%token INC DEC LAND LOR IF ELSE SWITCH CASE DEFAULT WHILE DO FOR
+%token INC DEC LAND LOR IF ELSE SWITCH CASE DEFAULT WHILE DO FOR RETURN BREAK CONTINUE
 %type<typeName> type non_const integer int_size
-%type<tree> scalar_decl idents single_ident expression unary_expr posfix_expr primary_expr array_decl arrays single_array array_shape arr_content list_contents func_decl func_cfg paras func_arg args func_def compound_stmt  stmts_decls decl stmt expr_stmt if_else_stmt switch_stmts switch_clauses switch_stmt while_stmt for_stmt opt_expr
+%type<tree> scalar_decl idents single_ident expression unary_expr posfix_expr primary_expr array_decl arrays single_array array_shape arr_content list_contents func_decl func_cfg paras func_arg args func_def compound_stmt  stmts_decls decl stmt expr_stmt if_else_stmt switch_stmts switch_clauses switch_stmt while_stmt for_stmt opt_expr return_stmt break_stmt continue_stmt
 
 %right '='
 %left LOR 
@@ -52,10 +52,22 @@ int yyerror(char *s);
 %%
 
 program: /* empty */
-	| program scalar_decl { printf("%s", $2); }
-	| program array_decl {printf("%s", $2); } 
-	| program func_decl {printf("%s", $2); }
-	| program func_def {printf("%s", $2);}
+	| program scalar_decl 
+		{	
+			printf("%s", $2); 
+		}
+	| program array_decl 
+		{
+			printf("%s", $2); 
+		} 
+	| program func_decl 
+		{
+			printf("%s", $2); 
+		}
+	| program func_def 
+	{
+		printf("%s", $2);
+	}
 	;
 scalar_decl: type idents ';' 
 	{
@@ -68,12 +80,12 @@ scalar_decl: type idents ';'
 type: CONST {$$ = $1;}
 	| CONST non_const
 	{
-		printf("type\n"); 
+		
 		char type_name[105]; 
 		sprintf(type_name, "%s%s", $1, $2); 
 		$$ = strdup(type_name); 
 	}
-	| non_const {$$ = $1;}
+	| non_const { $$ = $1;}
 non_const: 
 	SIGNED {$$ = $1; }
 	| UNSIGNED {$$ = $1; }
@@ -381,6 +393,24 @@ stmt:
 			sprintf(buffer, "<stmt>%s</stmt>", $1);
 			$$ = strdup(buffer);
 		}
+	| return_stmt
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "<stmt>%s</stmt>", $1);
+			$$ = strdup(buffer);
+		}
+	| break_stmt
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "<stmt>%s</stmt>", $1);
+			$$ = strdup(buffer);
+		}
+	| continue_stmt
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "<stmt>%s</stmt>", $1);
+			$$ = strdup(buffer);
+		}
 	; 
 expr_stmt: 
 	expression ';' 
@@ -504,6 +534,32 @@ for_stmt:
 opt_expr: 
 	/* empty */ {$$ = strdup("");}
 	| expression {$$ = $1;}
+	; 
+
+return_stmt: 
+	RETURN opt_expr ';'
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "return%s;", $2);
+			$$ = strdup(buffer);
+		}
+	; 
+break_stmt: 
+	BREAK ';' 
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "break;");
+			$$ = strdup(buffer);
+		}
+	; 
+continue_stmt: 
+	CONTINUE ';' 
+		{
+			char buffer[MAX_LEN]; 
+			sprintf(buffer, "continue;");
+			$$ = strdup(buffer);
+		}
+
 expression: expression '+' expression 
 	{ 
 		char buffer[1024];
@@ -653,10 +709,10 @@ unary_expr:
 		sprintf(buffer, "<expr>*%s</expr>", $2); 
 		$$ = strdup(buffer); 
 	}
-	| '&' ident %prec ADDR
+	| '&' unary_expr %prec ADDR
 	{
 		char buffer[MAX_LEN]; 
-		sprintf(buffer, "<expr>&<expr>%s</expr></expr>", $2); 
+		sprintf(buffer, "<expr>&%s</expr>", $2); 
 		$$ = strdup(buffer); 
 	}
 	| '(' type ')' unary_expr %prec TYPE_CAST
