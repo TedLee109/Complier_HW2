@@ -65,7 +65,10 @@ do {
 while {
 	return WHILE; 
 }
-for|break|continue|return|struct    { 
+for {
+	return FOR; 
+}
+break|continue|return|struct    { 
 	if(token) printf("#key:%s\n", yytext); 
 	store(yytext); 
 }
